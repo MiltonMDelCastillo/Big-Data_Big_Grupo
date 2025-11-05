@@ -1,15 +1,35 @@
-# 1. Iniciar infraestructura
+requerimientos 
+
+kafka-python==2.0.2
+pandas==2.0.3
+flask==2.3.3
+flask-cors==4.0.0
+//intalacion 
+🔧 INSTALACIÓN INDIVIDUAL DE CADA DEPENDENCIA
+1. Instalar kafka-python
+bash
+pip install kafka-python
+2. Instalar pandas
+bash
+pip install pandas
+3. Instalar flask
+bash
+pip install flask
+4. Instalar flask-cors
+bash
+pip install flask-cors
+----------------------------------
+
+🚀 ORDEN DE EJECUCIÓN:
+bash
+# Terminal 1 - Iniciar Kafka (desde la carpeta infra/)
+cd infra
 docker-compose up -d
 
-# 2. Crear topics
-chmod +x scripts/init-topics.sh
-./scripts/init-topics.sh
+# Terminal 2 - Ingestionar datos (desde carpeta principal)
+cd csv-producers
+python producer_sensores.py
 
-# 3. Instalar dependencias
-pip install kafka-python pandas
-
-# 4. Cargar datos
-./scripts/load-all-data.sh
-
-# 5. Ejecutar análisis de correlación (en otra terminal)
-python consumers/correlation-consumer/main.py
+# Terminal 3 - Ejecutar API (desde carpeta principal)  
+cd csv-producers
+python api_sensors.py
