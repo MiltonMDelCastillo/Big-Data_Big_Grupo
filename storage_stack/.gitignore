@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+env/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Datos sensibles
+data/
+*.csv
+*.xlsx
+*.xls
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Docker volumes (si se crean localmente)
+pgdata/
+mongodata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+
+# Backups
+backup_*.sql
+backup_mongo_*/
+backup_postgres_*/
+
