@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>WebSocket Demo</title></head>
+<body>
+  <input id="msg" type="text" placeholder="Mensaje">
+  <button onclick="send()">Enviar</button>
+  <ul id="chat"></ul>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:8000/ws");
+    ws.onmessage = (event) => {
+      const li = document.createElement("li");
+      li.textContent = event.data;
+      document.getElementById("chat").appendChild(li);
+    };
+    function send() {
+      const input = document.getElementById("msg");
+      ws.send(input.value);
+      input.value = "";
+    }
+  </script>
+</body>
+</html>
