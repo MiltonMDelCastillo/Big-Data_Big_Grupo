@@ -1,0 +1,15 @@
+# 1. Iniciar infraestructura
+docker-compose up -d
+
+# 2. Crear topics
+chmod +x scripts/init-topics.sh
+./scripts/init-topics.sh
+
+# 3. Instalar dependencias
+pip install kafka-python pandas
+
+# 4. Cargar datos
+./scripts/load-all-data.sh
+
+# 5. Ejecutar análisis de correlación (en otra terminal)
+python consumers/correlation-consumer/main.py
