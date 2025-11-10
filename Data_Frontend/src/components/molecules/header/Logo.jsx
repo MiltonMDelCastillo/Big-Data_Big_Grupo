@@ -9,7 +9,7 @@ const Logo = () => {
         alt="logo tienda"
         className="logo-img"
       />
-      <h1 className="logo-text">Binvity QR</h1>
+      <h1 className="logo-text">Data_big</h1>
     </div>
   )
 }

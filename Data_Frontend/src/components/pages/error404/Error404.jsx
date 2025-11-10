@@ -11,7 +11,7 @@ const Error404 = () => {
         <h1 className="error-code">404</h1>
         <h2 className="error-title">Página no encontrada</h2>
         <p className="error-message">
-          Lo sentimos, la dimensión que buscas no existe dentro de Binvity QR.
+          Lo sentimos, la dimensión que buscas no existe dentro de data big.
         </p>
 
         <Link to="/" className="back-home-btn">

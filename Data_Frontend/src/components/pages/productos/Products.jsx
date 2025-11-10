@@ -1,8 +1,9 @@
 import React from 'react'
+import Analitica from '../../analitica/Analitica'
 
 function Products() {
   return (
-    <div>Products</div>
+    <Analitica/>
   )
 }
 

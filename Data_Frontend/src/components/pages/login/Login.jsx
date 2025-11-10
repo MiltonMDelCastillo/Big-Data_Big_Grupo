@@ -46,8 +46,8 @@ const Login = () => {
     const password = e.target.password.value.trim();
 
     // Validación local temporal
-    if (email === "bleck@gmail.com" && password === "123abc") {
-      toast.success("Bienvenido, Bleck 👋");
+    if (email === "databig@gmail.com" && password === "123abc") {
+      toast.success("Bienvenido, User 👋");
       setTimeout(() => navigate("/"), 1500);
     } else {
       toast.error("Correo o contraseña incorrectos");
@@ -58,10 +58,10 @@ const Login = () => {
     <div className="login-page">
       <Toaster position="top-right" />
       <div className="login-card">
-        {/* Animación Binvity QR */}
+        
         <div className="login-title">
-          <AnimatedText text="Binvity" className="principal-binvity" delay={80} />
-          <AnimatedText text="QR" color="#ffffff" delay={80} />
+          <AnimatedText text="Data" className="principal-binvity" delay={80} />
+          <AnimatedText text="Big" color="#ffffff" delay={80} />
         </div>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
