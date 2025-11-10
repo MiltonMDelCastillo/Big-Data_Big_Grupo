@@ -1,9 +1,7 @@
 // Data_Backend/fakeData.js
-// Simulación realista de 4 colecciones y relaciones
 
 function randomFloat(min, max, decimals = 2) {
-  const v = Math.random() * (max - min) + min;
-  return Number(v.toFixed(decimals));
+  return Number((Math.random() * (max - min) + min).toFixed(decimals));
 }
 
 function randChoice(arr) {
@@ -17,25 +15,35 @@ function makeObjectId() {
   return id;
 }
 
-/* ========== STATIONS ========== */
+/* ======= CALL CENTER STREETS ======= */
+const streets = [
+  "Ballivián", "España", "Ayacucho", "Blanco Galindo", "23 de Marzo",
+  "Colonial", "La Paz", "Santa Cruz", "Sucre", "Potosí",
+  "Chuquisaca", "Cochabamba", "Independencia", "Oruro", "Tarija",
+  "Alberdi", "Arce", "Calle Florida", "Isabel La Católica", "Aniceto Arce"
+];
+
+/* ======= STATIONS ======= */
 const stations = [];
-const zoneNames = ["Centro", "Norte", "Sur", "Este", "Oeste"];
-for (let i = 1; i <= 50; i++) {
+for (let i = 1; i <= 30; i++) {
+  const street = randChoice(streets);
+  const number = Math.floor(randomFloat(1, 100));
   stations.push({
     id: i,
-    dev_eui: `DEVEUI${1000 + i}`,
-    device_name: `Device_${i}`,
-    profile_name: randChoice(["Default Profile", "Weather Sensor", "Telemetry"]),
-    tenant_name: randChoice(["TenantA", "TenantB", "TenantC"]),
-    tag_name: randChoice(["TagA", "TagB", "TagC", "TagD"]),
-    tag_desc: `Descripción de tag ${i}`,
-    tag_address: `${i} Calle Falsa`,
-    lat: randomFloat(-17.8, -16.0, 6),
-    lon: randomFloat(-68.5, -65.0, 6),
+    dev_eui: `DEV_CB_${1000 + i}`,
+    device_name: `Sensor_CB_${i}`,
+    station_name: `Estación_CB_${i}`,
+    tag_name: `Tag_CB_${i}`,
+    tag_desc: `Sensor del centro de Cochabamba, calle ${street}`,
+    tag_address: `${street} #${number}`,  // dirección realista
+    lat: randomFloat(-17.398, -17.36, 6),
+    lon: randomFloat(-66.18, -66.15, 6),
+    profile_name: randChoice(["Weather Sensor", "Telemetry", "Default Profile"]),
+    tenant_name: randChoice(["TenantA", "TenantB"])
   });
 }
 
-/* ========== VARIABLES ========== */
+/* ======= VARIABLES ======= */
 const variables = [];
 const varCodes = ["T", "H", "P", "BAT", "VIB"];
 for (let i = 1; i <= 40; i++) {
@@ -50,7 +58,7 @@ for (let i = 1; i <= 40; i++) {
   });
 }
 
-/* ========== MEASUREMENTS ========== */
+/* ======= MEASUREMENTS ======= */
 const measurements = [];
 for (let i = 0; i < 1000; i++) {
   const station = randChoice(stations);
@@ -67,27 +75,28 @@ for (let i = 0; i < 1000; i++) {
   });
 }
 
-/* ========== EVENTS ========== */
+/* ======= EVENTS ======= */
 const events = [];
 for (let i = 0; i < 500; i++) {
   const station = randChoice(stations);
   events.push({
     _id: makeObjectId(),
     time: new Date(Date.now() - i * 45000).toISOString(),
-    device: station.device_name, // clave para join con stations
+    device: station.device_name,
     tag: station.tag_name,
     object: {
-      temperature: randomFloat(-5, 45, 2),
-      humidity: randomFloat(10, 95, 2),
-      pressure: randomFloat(900, 1100, 2),
-      battery: randomFloat(2.5, 4.2, 2),
+      temperature: randomFloat(15, 35, 1),
+      humidity: randomFloat(30, 80, 1),    // Humidity ya incluido
+      pressure: randomFloat(980, 1050, 2),
+      battery: randomFloat(3, 4.2, 2),
       charging: Math.random() > 0.6
     },
     rx: {
       rss: Math.floor(randomFloat(-120, -40, 0)),
       snr: randomFloat(-10, 30, 1),
       dr: randChoice([0,1,2,3,4,5,6])
-    }
+    },
+    station: station  // incluimos estación completa para usar tag_address
   });
 }
 

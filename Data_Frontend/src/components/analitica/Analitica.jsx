@@ -30,7 +30,12 @@ export default function Analitica() {
                     humidity: r.object?.humidity,
                     pressure: r.object?.pressure,
                     battery: r.object?.battery,
+                    rss: r.rx?.rss,
+                    snr: r.rx?.snr,
                     station_name: r.station?.device_name ?? r.station?.tag_name,
+                    station_address: r.station?.tag_address ?? "—",
+                    lat: r.station?.lat ?? 0,
+                    lon: r.station?.lon ?? 0
                 }));
 
                 if (startDate && endDate) {
@@ -115,8 +120,8 @@ export default function Analitica() {
             ) : (
                 <Box className="ana-charts">
                     <Histograma data={data} />
-                    <SerieTiempo data={data} />
                     <MapaCalor data={data} />
+                    <SerieTiempo data={data} />
                     <GraficaControl data={data} />
                     <DiagramaPrediccion data={data} />
                     <HerramientasAnalitica onExport={() => handleExport(data)} />

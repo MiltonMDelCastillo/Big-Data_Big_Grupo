@@ -29,18 +29,21 @@ export default function ConectarMongo() {
           `http://localhost:5000/events/joined?page=${page + 1}&limit=${pageSize}&device=${quickFilter}`
         );
         const json = await res.json();
+        console.log("Events fetched:", json.data); // depuración
+
         const rows = (json.data || []).map((r, i) => ({
           id: i + page * pageSize,
           time: r.time,
           device: r.device,
           tag: r.tag,
-          temperature: r.object?.temperature,
-          humidity: r.object?.humidity,
-          pressure: r.object?.pressure,
-          battery: r.object?.battery,
-          rss: r.rx?.rssi ?? "",
+          temperature: r.object?.temperature ?? null,
+          humidity: r.object?.humidity ?? null, // Humidity real
+          pressure: r.object?.pressure ?? null,
+          battery: r.object?.battery ?? null,
+          rss: r.rx?.rss ?? "",
           snr: r.rx?.snr ?? "",
-          station_name: r.station?.device_name ?? r.station?.tag_name ?? "",
+          station_name: r.station?.station_name ?? r.station?.tag_name ?? "",
+          station_address: r.station?.tag_address ?? "—", // dirección de la calle
           latestMeasurements: r.latestMeasurements ?? [],
         }));
         setRowData(rows);
@@ -86,17 +89,38 @@ export default function ConectarMongo() {
       },
       {
         field: "humidity",
-        headerName: "Humidity",
+        headerName: "Humidity (%)",
         flex: 1,
-        minWidth: 100,
-        valueFormatter: (params) =>
-          params.value != null ? `${params.value}%` : "—",
+        minWidth: 120,
+        renderCell: (params) => {
+          const v = params.value;
+          if (v == null) return "—";
+          const color = v >= 70 ? "#1976d2" : v >= 50 ? "#4caf50" : "#ff9800";
+          return (
+            <span
+              style={{
+                background: color,
+                color: "#fff",
+                padding: "4px 8px",
+                borderRadius: 8,
+                fontWeight: 600,
+              }}
+            >
+              {v.toFixed(1)}%
+            </span>
+          );
+        },
       },
       { field: "pressure", headerName: "Pressure", flex: 1.2, minWidth: 100 },
       { field: "battery", headerName: "Battery", flex: 0.9, minWidth: 90 },
       { field: "rss", headerName: "RSS", flex: 0.9, minWidth: 90 },
       { field: "snr", headerName: "SNR", flex: 0.9, minWidth: 90 },
-      { field: "station_name", headerName: "Estación", flex: 1.4, minWidth: 140 },
+      {
+        field: "station_address",
+        headerName: "Calle / Dirección",
+        flex: 1.4,
+        minWidth: 180,
+      },
       {
         field: "actions",
         headerName: "Acciones",
@@ -105,20 +129,18 @@ export default function ConectarMongo() {
         sortable: false,
         filterable: false,
         renderCell: (params) => {
+          const meas = params.row.latestMeasurements || [];
           return (
             <Button
               variant="contained"
               size="small"
               className="futuristic-btn"
-              onClick={() => {
-                const meas = params.row.latestMeasurements || [];
+              onClick={() =>
                 alert(
                   `Últimas mediciones (${meas.length}):\n` +
-                    meas
-                      .map((m) => `${m.variable_id}: ${m.value_num} @ ${m.ts}`)
-                      .join("\n")
-                );
-              }}
+                    meas.map((m) => `${m.variable_id}: ${m.value_num} @ ${m.ts}`).join("\n")
+                )
+              }
             >
               Ver
             </Button>
