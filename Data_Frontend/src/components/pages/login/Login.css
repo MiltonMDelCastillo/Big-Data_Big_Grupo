@@ -1,0 +1,289 @@
+/* === Fondo animado === */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at 30% 30%, #001a33, #000814);
+  background-size: 400% 400%;
+  animation: neonMove 10s ease infinite;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+}
+
+@keyframes neonMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === Tarjeta estilo glassmorphism === */
+.login-card {
+  background: rgba(10, 20, 40, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 40px 35px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+  text-align: center;
+  color: #E0F7FA;
+  max-width: 400px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.login-card:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+}
+
+/* === Título === */
+.login-card h3 {
+  margin-bottom: 25px;
+  font-size: 24px;
+  color: #00FFFF;
+  text-shadow: 0 0 8px #00FFFF;
+}
+
+/* === Inputs === */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  position: relative;
+  text-align: left;
+}
+
+.input-group label {
+  margin-bottom: 6px;
+  color: #7FDBFF;
+  font-weight: 500;
+}
+
+.input-group input {
+  background: rgba(255, 255, 255, 0.1);
+  color: #E0F7FA;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #00FFFF;
+  box-shadow: 0 0 8px #00FFFF;
+}
+
+/* === Botón mostrar contraseña === */
+.password-group {
+  position: relative;
+}
+
+.show-password {
+  position: absolute;
+  right: 12px;
+  top: 38px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #00FFFF;
+}
+
+/* === Botón principal (estilo Error404) === */
+.back-home-btn {
+  display: inline-block;
+  padding: 12px 30px;
+  background: transparent;
+  border: 2px solid #00FFFF;
+  border-radius: 12px;
+  color: #00FFFF;
+  text-decoration: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 2;
+  width: 100%;
+}
+
+.back-home-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, #00FFFF, transparent);
+  transition: 0.5s;
+  z-index: -1;
+}
+
+.back-home-btn:hover::before {
+  left: 100%;
+}
+
+.back-home-btn:hover {
+  background: rgba(0, 255, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 0 20px #00FFFF;
+  transform: translateY(-3px);
+}
+
+/* === Botón principal Que no esta utilizando pero es bonito el color === */
+.login-btn {
+  display: inline-block;
+  padding: 12px 25px;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #ff7eb3, #ff758c);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 120, 150, 0.4);
+}
+
+/* === Texto de registro === */
+.signup-text {
+  margin-top: 20px;
+  color: #B0E0E6;
+}
+
+.signup-link {
+  color: #ff758c;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.signup-link:hover {
+  text-shadow: 0 0 10px #ff758c;
+}
+
+/* === Toast === */
+.Toastify__toast {
+  background: #001f33;
+  color: #00FFFF;
+}
+
+/* ==== ESTILO DEL TITULO BINVITY QR ==== */
+.login-title {
+  font-size: 3rem; /* Ajusta según el tamaño que quieras */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.principal-binvity {
+  color: #00ffff; /* Color cian luminoso */
+  text-shadow:
+    0 0 5px #06ffff,
+    0 0 10px #00FFFF,
+    0 0 20px #00FFFF,
+    0 0 40px #28ecfa;
+  font-style: italic;
+  font-family: 'Georgia', serif;
+}
+
+.principal-qr {
+  color: #ff4d6d; /* Color fucsia/rosa */
+  text-shadow:
+    0 0 5px #ff758c,
+    0 0 10px #ff4d6d,
+    0 0 20px #ff4d6d,
+    0 0 40px #ff7eb3;
+  font-style: italic;
+  font-family: 'Georgia', serif;
+}
+
+/* Animación tipo BlurText */
+.animated-text {
+  font-family: 'Georgia', serif;
+  font-size: 3rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  letter-spacing: 4px;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.animated-letter {
+  opacity: 0;
+  transform: translateY(-50px) scale(0.8);
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+  animation: blur-slide 0.6s forwards;
+}
+
+@keyframes blur-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.8);
+    filter: blur(4px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(10px) scale(1.05);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ==== ESTILO DEL INICIAR SESION ==== */
+.animated-text.small-text { 
+  font-size: 1rem;  /* tamaño de letra más pequeño */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* letra normal */
+  font-weight: normal;  /* sin negrita */
+  text-shadow: none;    /* sin sombra */
+  margin: 0;            /* opcional, ajustar si hay margenes */
+   /* para que funcione bien con animaciones */
+  color: #ffffff;       /* color blanco, si quieres */
+  margin: 0px;
+}
+/* Inputs */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+  margin-top: 8px;
+}
+/* Small text */
+.small-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-block;
+  text-shadow: none;
+  color: #ffffff;
+  margin: 0;
+}
+

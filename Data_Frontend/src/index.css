@@ -1,0 +1,17 @@
+/* index.css */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0A0F1E; /* Fondo azul oscuro principal */
+  color: #ffffff; /* Texto en blanco por defecto */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Elimina cualquier fondo blanco heredado de elementos globales */
+* {
+  box-sizing: border-box;
+}
+
+
+
