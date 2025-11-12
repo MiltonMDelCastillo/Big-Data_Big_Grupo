@@ -4,6 +4,10 @@ kafka-python==2.0.2
 pandas==2.0.3
 flask==2.3.3
 flask-cors==4.0.0
+pymongo==4.6.0
+numpy==1.24.3
+dnspython==2.4.2  # Requerido para conexiones mongodb+srv (MongoDB Atlas)
+
 //intalacion 
 🔧 INSTALACIÓN INDIVIDUAL DE CADA DEPENDENCIA
 1. Instalar kafka-python
@@ -18,6 +22,15 @@ pip install flask
 4. Instalar flask-cors
 bash
 pip install flask-cors
+5. Instalar pymongo (para MongoDB)
+bash
+pip install pymongo
+6. Instalar numpy
+bash
+pip install numpy
+7. Instalar dnspython (requerido para MongoDB Atlas)
+bash
+pip install dnspython
 ----------------------------------
 
 🚀 ORDEN DE EJECUCIÓN:
@@ -32,4 +45,4 @@ python producer_sensores.py
 
 # Terminal 3 - Ejecutar API (desde carpeta principal)  
 cd csv-producers
-python api_sensors.py
+python api_sensores.py
