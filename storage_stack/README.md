@@ -1,7 +1,7 @@
 
 # Integrante 4 – Storage (SQL + NoSQL)
 
-## 0) Requisitos
+## 0) Requisitos 
 - Docker + Docker Compose
 - Python 3.10+
 - (Opcional) `psql` y `mongosh` en tu PATH
