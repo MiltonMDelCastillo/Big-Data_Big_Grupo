@@ -8,6 +8,8 @@ import {
   TextField,
   Button,
   CircularProgress,
+  Modal,
+  Paper,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import "./ConectarMongo.css"; // estilos futuristas
@@ -16,11 +18,24 @@ export default function ConectarMongo() {
   const [rowData, setRowData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quickFilter, setQuickFilter] = useState("");
-  const [page, setPage] = useState(0); // DataGrid usa 0-based
+  const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [rowCount, setRowCount] = useState(0);
 
-  // Consumir API con paginación y filtro remoto
+  const [openModal, setOpenModal] = useState(false);
+  const [modalContent, setModalContent] = useState("");
+
+  const variableMap = {
+    11: "Temperatura (°C)",
+    13: "Humedad (%)",
+    15: "Presión (hPa)",
+    20: "Batería (%)",
+    25: "Velocidad del viento (m/s)",
+    28: "Luminosidad (lux)",
+    29: "CO2 (ppm)",
+    30: "Otra medida"
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -29,7 +44,6 @@ export default function ConectarMongo() {
           `http://localhost:5000/events/joined?page=${page + 1}&limit=${pageSize}&device=${quickFilter}`
         );
         const json = await res.json();
-        console.log("Events fetched:", json.data); // depuración
 
         const rows = (json.data || []).map((r, i) => ({
           id: i + page * pageSize,
@@ -37,13 +51,13 @@ export default function ConectarMongo() {
           device: r.device,
           tag: r.tag,
           temperature: r.object?.temperature ?? null,
-          humidity: r.object?.humidity ?? null, // Humidity real
+          humidity: r.object?.humidity ?? null,
           pressure: r.object?.pressure ?? null,
           battery: r.object?.battery ?? null,
           rss: r.rx?.rss ?? "",
           snr: r.rx?.snr ?? "",
           station_name: r.station?.station_name ?? r.station?.tag_name ?? "",
-          station_address: r.station?.tag_address ?? "—", // dirección de la calle
+          station_address: r.station?.tag_address ?? "—",
           latestMeasurements: r.latestMeasurements ?? [],
         }));
         setRowData(rows);
@@ -56,7 +70,21 @@ export default function ConectarMongo() {
     fetchData();
   }, [page, pageSize, quickFilter]);
 
-  // Columnas para DataGrid
+  const handleOpenModal = (params) => {
+    const meas = params.row.latestMeasurements || [];
+    const text = meas
+      .map((m) => {
+        const nombre = variableMap[m.variable_id] || `Variable desconocida (${m.variable_id})`;
+        return `${nombre}:\n${m.value_num}\n${new Date(m.ts).toLocaleString()}`;
+      })
+      .join("\n\n");
+    setModalContent(
+      `Últimas mediciones - ${params.row.device}:\n\n${text || "No hay mediciones"}`
+    );
+    setOpenModal(true);
+  };
+
+
   const columns = useMemo(
     () => [
       { field: "time", headerName: "Time", flex: 1.8, minWidth: 180 },
@@ -129,18 +157,12 @@ export default function ConectarMongo() {
         sortable: false,
         filterable: false,
         renderCell: (params) => {
-          const meas = params.row.latestMeasurements || [];
           return (
             <Button
               variant="contained"
               size="small"
               className="futuristic-btn"
-              onClick={() =>
-                alert(
-                  `Últimas mediciones (${meas.length}):\n` +
-                    meas.map((m) => `${m.variable_id}: ${m.value_num} @ ${m.ts}`).join("\n")
-                )
-              }
+              onClick={() => handleOpenModal(params)}
             >
               Ver
             </Button>
@@ -168,14 +190,14 @@ export default function ConectarMongo() {
               variant="h5"
               sx={{ fontWeight: 700, flex: "1 1 auto", color: "#000" }}
             >
-              📡 Eventos · Dashboard
+              Eventos · Dashboard
             </Typography>
 
             <TextField
               size="small"
               placeholder="🔎 Buscar (device, tag, estación...)"
               onChange={(e) => {
-                setPage(0); // resetear página al filtrar
+                setPage(0);
                 setQuickFilter(e.target.value);
               }}
               sx={{ width: 360, background: "#fff", borderRadius: 1 }}
@@ -218,6 +240,50 @@ export default function ConectarMongo() {
               />
             </div>
           )}
+
+          {/* Modal para últimas mediciones */}
+          <Modal
+            open={openModal}
+            onClose={() => setOpenModal(false)}
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            <Paper
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 400,
+                maxHeight: "80vh",
+                overflowY: "auto",
+                bgcolor: "#1e1e1e",
+                color: "#fff",
+                borderRadius: 3,
+                boxShadow: 24,
+                p: 3,
+              }}
+            >
+              <Typography id="modal-title" variant="h6" sx={{ mb: 2 }}>
+                Últimas Mediciones
+              </Typography>
+              <Typography
+                id="modal-description"
+                sx={{ whiteSpace: "pre-line", fontFamily: "monospace" }}
+              >
+                {modalContent}
+              </Typography>
+              <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => setOpenModal(false)}
+                >
+                  Cerrar
+                </Button>
+              </Box>
+            </Paper>
+          </Modal>
         </CardContent>
       </Card>
     </Box>
