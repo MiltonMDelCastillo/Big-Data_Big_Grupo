@@ -5,19 +5,27 @@ import os
 from datetime import datetime
 import logging
 from pymongo import MongoClient
+from pymongo.errors import BulkWriteError, DuplicateKeyError
 from limpieza_datos import limpiar_datos
 
 # Configurar logging para ver qué está pasando
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# CONFIGURACIÓN DE RENDIMIENTO
+CHUNK_SIZE_CSV = 5000  # Tamaño de chunk para leer CSV (aumentado para mejor rendimiento)
+BATCH_SIZE_MONGODB = 1000  # Tamaño de lote para inserción en MongoDB (bulk insert)
+BATCH_SIZE_KAFKA = 5000  # Tamaño de lote para flush de Kafka
+
 # Configuración Kafka - Conexión con Docker
 try:
     producer = KafkaProducer(
         bootstrap_servers=['localhost:9092'],  # Puerto de Kafka en Docker
         value_serializer=lambda v: json.dumps(v, default=str).encode('utf-8'),  # Convertir a JSON
-        batch_size=16384,  # Mejor rendimiento para muchos mensajes
-        linger_ms=10
+        batch_size=32768,  # Aumentado para mejor rendimiento
+        linger_ms=50,  # Esperar un poco más para agrupar mensajes
+        compression_type='gzip',  # Comprimir mensajes para ahorrar ancho de banda
+        max_in_flight_requests_per_connection=5  # Permitir más requests en paralelo
     )
     logger.info("✅ KafkaProducer creado correctamente - Conectado a localhost:9092")
 except Exception as e:
@@ -30,7 +38,9 @@ try:
     mongo_uri = 'mongodb+srv://fabricabla_db_user:ifMIBidJuyoCai24@cluster0.e0tjitb.mongodb.net/'
     mongo_client = MongoClient(
         mongo_uri,
-        serverSelectionTimeoutMS=5000
+        serverSelectionTimeoutMS=10000,  # Aumentado timeout
+        maxPoolSize=50,  # Aumentar pool de conexiones
+        minPoolSize=10
     )
     # Verificar conexión
     mongo_client.server_info()
@@ -44,7 +54,8 @@ except Exception as e:
 
 def procesar_csv_sensores(ruta_archivo, tipo_sensor):
     """
-    Procesa archivos CSV de sensores IoT y envía los datos a Kafka
+    Procesa archivos CSV de sensores IoT y envía los datos a Kafka y MongoDB
+    OPTIMIZADO para manejar más de 1 millón de registros usando bulk insert
     
     Args:
         ruta_archivo (str): Ruta al archivo CSV
@@ -56,15 +67,34 @@ def procesar_csv_sensores(ruta_archivo, tipo_sensor):
         if not os.path.exists(ruta_archivo):
             logger.error(f"❌ Archivo no encontrado: {ruta_archivo}")
             return 0
-            
-        chunk_size = 1000  # Procesar en lotes para no sobrecargar memoria
+        
         total_registros = 0
+        total_procesados = 0
+        total_errores = 0
+        
+        # Buffer para acumular documentos de MongoDB antes de insertar en lote
+        buffer_mongodb = []
         
         logger.info(f"📂 Procesando: {ruta_archivo} como {tipo_sensor}")
+        logger.info(f"⚙️  Configuración: Chunk CSV={CHUNK_SIZE_CSV}, Batch MongoDB={BATCH_SIZE_MONGODB}")
+        
+        # Obtener colección de MongoDB una sola vez
+        coleccion = None
+        if db is not None:
+            coleccion = db[f'sensores_{tipo_sensor}']
+            # Crear índices para mejorar rendimiento (si no existen)
+            try:
+                coleccion.create_index([('timestamp', 1), ('tipo_sensor', 1)])
+                coleccion.create_index('device_name')
+            except:
+                pass  # Los índices ya existen o hay error, continuar
+        
+        topic = f"topic-{tipo_sensor}"
+        timestamp_ingesta_base = datetime.now()
         
         # Leer CSV por chunks (pedazos) para archivos grandes
-        for chunk_num, chunk in enumerate(pd.read_csv(ruta_archivo, chunksize=chunk_size)):
-            logger.info(f"   📦 Chunk {chunk_num} - {len(chunk)} registros")
+        for chunk_num, chunk in enumerate(pd.read_csv(ruta_archivo, chunksize=CHUNK_SIZE_CSV, low_memory=False)):
+            logger.info(f"   📦 Procesando Chunk {chunk_num + 1} - {len(chunk)} registros")
             
             # Procesar cada fila del chunk
             for idx, fila in chunk.iterrows():
@@ -72,68 +102,100 @@ def procesar_csv_sensores(ruta_archivo, tipo_sensor):
                     # LIMPIEZA DE DATOS usando el módulo de limpieza
                     datos_limpios = limpiar_datos(fila, tipo_sensor)
                     
-                    # Crear mensaje estructurado para Kafka y MongoDB
-                    id_unico = f"{tipo_sensor}_{fila.get('_id', idx)}_{total_registros}"
+                    # Crear ID único más robusto
+                    id_unico = f"{tipo_sensor}_{chunk_num}_{idx}_{total_registros}"
                     
+                    # Crear mensaje estructurado para Kafka
                     mensaje = {
                         'id_unico': id_unico,
                         'tipo_sensor': tipo_sensor,
                         'timestamp_original': datos_limpios.get('timestamp'),
-                        'timestamp_ingesta': datetime.now().isoformat(),  # Cuando lo procesamos
+                        'timestamp_ingesta': timestamp_ingesta_base.isoformat(),
                         'fuente_archivo': os.path.basename(ruta_archivo),
-                        'datos_limpios': datos_limpios  # Datos ya limpios y estructurados
+                        'datos_limpios': datos_limpios
                     }
                     
-                    # Enviar a topic específico de Kafka
-                    topic = f"topic-{tipo_sensor}"
+                    # Enviar a Kafka (asíncrono, no bloquea)
                     producer.send(topic, value=mensaje)
                     
-                    # Guardar en MongoDB
-                    if db is not None:
-                        try:
-                            # Preparar documento para MongoDB
-                            documento_mongo = {
-                                '_id': id_unico,
-                                'tipo_sensor': tipo_sensor,
-                                'timestamp_ingesta': datetime.now(),
-                                'fuente_archivo': os.path.basename(ruta_archivo),
-                                **datos_limpios  # Expandir los datos limpios
-                            }
-                            
-                            # Convertir timestamp string a datetime si existe
-                            if 'timestamp' in documento_mongo and isinstance(documento_mongo['timestamp'], str):
-                                try:
-                                    documento_mongo['timestamp'] = datetime.fromisoformat(
-                                        documento_mongo['timestamp'].replace('Z', '+00:00')
-                                    )
-                                except:
-                                    pass  # Mantener como string si no se puede parsear
-                            
-                            # Insertar en colección específica del tipo de sensor
-                            coleccion = db[f'sensores_{tipo_sensor}']
-                            coleccion.insert_one(documento_mongo)
-                            
-                        except Exception as e_mongo:
-                            logger.warning(f"⚠️ Error guardando en MongoDB (fila {idx}): {e_mongo}")
+                    # Preparar documento para MongoDB (acumular en buffer)
+                    if coleccion is not None:
+                        documento_mongo = {
+                            '_id': id_unico,
+                            'tipo_sensor': tipo_sensor,
+                            'timestamp_ingesta': timestamp_ingesta_base,
+                            'fuente_archivo': os.path.basename(ruta_archivo),
+                            **datos_limpios
+                        }
+                        
+                        # Convertir timestamp string a datetime si existe
+                        if 'timestamp' in documento_mongo and isinstance(documento_mongo['timestamp'], str):
+                            try:
+                                documento_mongo['timestamp'] = datetime.fromisoformat(
+                                    documento_mongo['timestamp'].replace('Z', '+00:00')
+                                )
+                            except:
+                                pass  # Mantener como string si no se puede parsear
+                        
+                        buffer_mongodb.append(documento_mongo)
                     
                     total_registros += 1
+                    total_procesados += 1
                     
-                    # Flush periódico para no acumular en memoria
-                    if total_registros % 500 == 0:
+                    # Insertar en MongoDB cuando el buffer alcanza el tamaño del lote
+                    if len(buffer_mongodb) >= BATCH_SIZE_MONGODB:
+                        try:
+                            # Bulk insert en MongoDB (MUCHO más rápido que insert_one)
+                            resultado = coleccion.insert_many(buffer_mongodb, ordered=False)
+                            logger.info(f"   💾 Insertados {len(resultado.inserted_ids)} documentos en MongoDB (lote)")
+                        except BulkWriteError as bwe:
+                            # Algunos documentos pueden fallar (duplicados, etc.), pero continuamos
+                            insertados = len(bwe.details.get('insertedIds', []))
+                            logger.warning(f"   ⚠️  Insertados {insertados}/{len(buffer_mongodb)} documentos (algunos duplicados)")
+                        except Exception as e_mongo:
+                            logger.warning(f"   ⚠️  Error en bulk insert MongoDB: {e_mongo}")
+                        
+                        buffer_mongodb = []  # Limpiar buffer
+                    
+                    # Flush periódico de Kafka
+                    if total_registros % BATCH_SIZE_KAFKA == 0:
                         producer.flush()
-                        logger.info(f"   📤 Enviados {total_registros} registros a Kafka y MongoDB...")
+                        logger.info(f"   📤 Procesados {total_registros} registros... (Kafka flushed)")
                         
                 except Exception as e:
-                    logger.error(f"❌ Error en fila {idx}: {e}")
+                    total_errores += 1
+                    if total_errores <= 10:  # Solo mostrar primeros 10 errores
+                        logger.error(f"❌ Error en fila {idx}: {e}")
                     continue  # Continuar con siguiente fila si hay error
+            
+            # Flush después de cada chunk para no acumular demasiado
+            producer.flush()
+        
+        # Insertar documentos restantes en el buffer
+        if buffer_mongodb and coleccion is not None:
+            try:
+                resultado = coleccion.insert_many(buffer_mongodb, ordered=False)
+                logger.info(f"   💾 Insertados {len(resultado.inserted_ids)} documentos finales en MongoDB")
+            except BulkWriteError as bwe:
+                insertados = len(bwe.details.get('insertedIds', []))
+                logger.warning(f"   ⚠️  Insertados {insertados}/{len(buffer_mongodb)} documentos finales")
+            except Exception as e_mongo:
+                logger.warning(f"   ⚠️  Error en bulk insert final: {e_mongo}")
         
         # Flush final para asegurar que todos los mensajes se envíen
         producer.flush()
-        logger.info(f"✅ {ruta_archivo}: {total_registros} registros procesados y enviados a Kafka y MongoDB")
-        return total_registros
+        
+        logger.info(f"✅ {ruta_archivo}: {total_procesados} registros procesados")
+        logger.info(f"   📊 Enviados a Kafka: {total_procesados}")
+        logger.info(f"   💾 Guardados en MongoDB: {total_procesados - total_errores}")
+        logger.info(f"   ❌ Errores: {total_errores}")
+        
+        return total_procesados
         
     except Exception as e:
         logger.error(f"❌ Error procesando {ruta_archivo}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return 0
 
 if __name__ == "__main__":
@@ -148,7 +210,7 @@ if __name__ == "__main__":
     # CONFIGURACIÓN DE ARCHIVOS - USANDO JERARQUÍA DE CARPETAS
     archivos_config = [
         {
-            'archivo': os.path.join(DATA_DIR, 'subterraneos', 'EM310-UDL-915M soterrados nov 2024.csv'),
+            'archivo': os.path.join(DATA_DIR, 'subterraneo', 'EM310-UDL-915M soterrados nov 2024.csv'),
             'tipo': 'soterrados',
             'descripcion': 'Sensores de nivel de líquido/tanques'
         },
