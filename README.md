@@ -70,16 +70,40 @@ cd csv-producers
 python producer_sensores.py
 ```
 
+> 💡 **Sin Kafka?** Si solo quieres poblar MongoDB (por ejemplo en pruebas sin Docker),
+> ejecuta el script con la variable `ENABLE_KAFKA=false`:
+>
+> ```bash
+> set ENABLE_KAFKA=false   # En PowerShell: $env:ENABLE_KAFKA="false"
+> python producer_sensores.py
+> ```
+
+> 🎯 **Cargar solo ciertos sensores?** Usa `SENSORES_ACTIVOS` con la lista deseada.
+> Por ejemplo, para cargar únicamente aire y sonido:
+> ```bash
+> set SENSORES_ACTIVOS=sonido,calidad-aire
+> python producer_sensores.py
+> ```
+
+> 📏 **Cambiar el límite por CSV?** Define `MAX_REGISTROS_POR_ARCHIVO`.  
+> Ejemplo para procesar todo el archivo (sin límite):
+> ```bash
+> set MAX_REGISTROS_POR_ARCHIVO=0
+> python producer_sensores.py
+> ```
+
 Este script:
 - Lee los archivos CSV de la carpeta `data/`
 - Limpia y procesa los datos
 - Envía los datos a Kafka (topics: `topic-soterrados`, `topic-sonido`, `topic-calidad-aire`)
 - Guarda los datos en MongoDB Atlas usando **bulk insert** (optimizado para grandes volúmenes)
 
-**Archivos procesados:**
+**Archivos procesados:** (solo se cargan los que existan en `data/`)
 - `data/subterraneo/EM310-UDL-915M soterrados nov 2024.csv` → Sensores soterrados
 - `data/sonido/WS302-915M SONIDO NOV 2024.csv` → Sensores de sonido
 - `data/aire/EM500-CO2-915M nov 2024.csv` → Sensores de calidad de aire
+
+> ⏱️ **Límite por archivo:** por defecto se procesan máx. 200 000 registros de cada CSV para evitar saturar los servicios. Cambia el valor con `MAX_REGISTROS_POR_ARCHIVO`.
 
 ### 5. (Opcional) Ejecutar la API
 
@@ -105,7 +129,7 @@ El script ha sido optimizado para manejar más de 1 millón de registros:
 
 1. **Bulk Insert en MongoDB**: Usa `insert_many()` en lugar de `insert_one()`, insertando 1000 documentos por lote
 2. **Chunks más grandes**: Lee 5000 registros del CSV a la vez (antes 1000)
-3. **Compresión en Kafka**: Mensajes comprimidos con gzip
+3. **Compresión en Kafka**: Mensajes comprimidos con gzip (se puede desactivar con `ENABLE_KAFKA=false`)
 4. **Pool de conexiones**: MongoDB con pool de 10-50 conexiones
 5. **Índices automáticos**: Se crean índices en MongoDB para mejorar consultas
 6. **Manejo de errores**: Continúa procesando aunque haya errores en algunos registros
@@ -141,6 +165,7 @@ Puedes ajustar los parámetros de rendimiento en `producer_sensores.py`:
 CHUNK_SIZE_CSV = 5000        # Tamaño de chunk para leer CSV
 BATCH_SIZE_MONGODB = 1000    # Tamaño de lote para MongoDB
 BATCH_SIZE_KAFKA = 5000      # Tamaño de lote para Kafka
+MAX_REGISTROS_POR_ARCHIVO = 200000  # Límite por CSV (usa 0 para desactivar)
 ```
 
 ## ⚠️ Solución de Problemas
