@@ -1,6 +1,20 @@
+# Base Python
 FROM python:3.10
+
+# Directorio de la app
 WORKDIR /app
+
+# Copiar requirements
+COPY requirements.txt .
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar todo el código
 COPY . .
-RUN pip install -r requirements.txt
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Exponer puerto de Flask
+EXPOSE 5000
+
+# Ejecutar la app con eventlet (recomendado para SocketIO)
+CMD ["python", "create_endpoint.py"]
