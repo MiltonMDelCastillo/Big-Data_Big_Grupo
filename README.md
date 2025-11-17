@@ -1,156 +1,186 @@
-# Big-Data_Big_Grupo
-# 📡 Sistema en Tiempo Real para Captura, Análisis, Visualización y Monitoreo de Datos Ambientales del GAMC
+Sistema de Ingesta en Tiempo Real con Kafka + API REST 
 
-Sistema en tiempo real para el **captura, análisis, visualización y monitoreo** de datos de **calidad de aire**, **soterrados** y **sonido** del Gobierno Autónomo Municipal de Cochabamba (GAMC).
+ 
 
----
+Este módulo implementa un pipeline de ingesta en tiempo real utilizando: 
 
-## 👥 Integrantes del Equipo
+API REST (Python – Flask/FastAPI) 
 
-- **Chambi Mamani Vladimir**  
-- **Escalera Muñoz Christhian Andrés**  
-- **Maldonado Caballero Erick**  
-- **Camacho Blanco Fabricio** *(Team Leader)*  
-- **Martinez del Castillo Milton Rael**  
-- **Pareja Almendras Samuel Reynaldo** *(Team Leader)*  
+Apache Kafka (productor/consumidor) 
 
----
+Docker + Docker Compose 
 
-## 📘 Introducción
+Postman para pruebas 
 
-En la era digital actual, el GAMC enfrenta un crecimiento acelerado en volumen, variedad y velocidad de generación de datos provenientes de sensores ambientales. Estos datos son críticos para la toma de decisiones estratégicas, pero los sistemas tradicionales de procesamiento por lotes no permiten una respuesta oportuna en tiempo real.
+Procesamiento en vivo 
 
-La incapacidad de procesar grandes volúmenes de datos en formatos complejos (texto, JSON, imágenes, audio, video) genera retrasos importantes entre la ocurrencia de un evento y la capacidad de reacción del municipio.
+El objetivo es recibir datos desde sensores, enviarlos a Kafka y procesarlos en tiempo real. 
 
-Este proyecto propone una **arquitectura moderna en tiempo real**, robusta, escalable y capaz de procesar datos de forma eficiente para apoyar la gestión ambiental del GAMC.
+0) Requisitos Previos 
 
----
+Asegúrate de tener instalado: 
 
-## ❗ Problemática
+Docker + Docker Desktop 
 
-El incremento en volumen y variedad de datos de sensores puede provocar cuellos de botella, lentitud en el procesamiento y retrasos en la toma de decisiones.
+Python 3.10+ 
 
----
+Postman (opcional, para pruebas) 
 
-## 🎯 Objetivo General
+VS Code u otro editor 
 
-Desarrollar un sistema en tiempo real que permita capturar, procesar y analizar datos heterogéneos, mostrar información visual clara y comprensible, y ofrecer herramientas robustas para la toma de decisiones del GAMC.
+(Opcional) Kafka UI 
 
----
+1) Clonar y Configurar el Proyecto 
 
-## 🎯 Objetivos Específicos
+# Copiar módulo dentro del proyecto principal 
+cp -r realtime_kafka ./integranteX_realtime 
+cd integranteX_realtime 
 
-1. Implementar tecnologías **ETL** para preprocesamiento y automatización de carga.
-2. Elaborar el **diagrama de arquitectura** y su descripción textual.
-3. Investigar e implementar tecnologías para **comunicación en tiempo real** (WebSockets).
-4. Analizar e implementar tecnologías de **Data Ingestion** eficientes y asincrónicas.  
-5. Implementar almacenamiento mixto: **SQL y NoSQL**.
-6. Incorporar componentes para **analítica de datos** ambiental.
-7. Implementar herramientas de **visualización** en dashboards.
-8. Crear un **generador de datos sintéticos** para pruebas.
-9. Preparar el **deployment** con Docker o sistema dockerizado.
+Crear archivo .env: 
 
----
+cp .env.example .env 
 
-## 📏 Alcance
+Variables por defecto: 
 
-El sistema será capaz de procesar datos provenientes de sensores de **calidad de aire**, **sonido** y **soterrados**, incluyendo datos numéricos, imágenes y audio.
+KAFKA_BROKER=localhost:9092 
+TOPIC_NAME=sensor_data 
+API_PORT=5000 
 
----
+Edita si deseas cambiar valores. 
 
-# 🏛️ Arquitectura del Sistema
+2) Levantar Kafka con Docker 
 
-## 🔷 1) Diagrama de Arquitectura
-_diagrama en el docx
+Ejecuta: 
 
-## 🔷 2) Descripción de la Arquitectura
+docker compose up -d 
 
-El sistema se estructura en capas:
+Esto inicia: 
 
-- Sensores / Edge  
-- Ingestión  
-- Bus de eventos  
-- Procesamiento en tiempo real  
-- ETL / Dataflow  
-- Almacenamiento  
-- Analítica  
-- API y Visualización  
-- Monitoreo y operación  
+Zookeeper 
 
-Tecnologías principales:
+Kafka Broker 
 
-- **MQTT / HTTP** para sensores  
-- **Apache Kafka** para eventos  
-- **Apache NiFi** para ETL  
-- **Apache Flink / Kafka Streams** para streaming  
-- **TimescaleDB / InfluxDB / MinIO** para almacenamiento  
-- **Grafana + React** para visualización  
-- **Prometheus + Alertmanager** para monitoreo  
-- **Docker/Kubernetes** para despliegue  
+Kafka UI (si está configurado) 
 
-_(Si deseas, puedo incluir la descripción completa de cada componente como la que me enviaste.)_
+Verifica que está corriendo: 
 
----
+docker ps 
+ 
 
-## 🌀 Flujo End-to-End de Datos
-1. Sensores → Gateway  
-2. Gateway → Kafka  
-3. Kafka → Procesamiento (Flink/Streams)  
-4. Procesamiento → Bases de datos  
-5. Alertas → WebSockets / Alertmanager  
-6. Visualización → Grafana y SPA (React)  
+3) Ejecutar la API REST 
 
----
+Crear entorno virtual: 
 
-## 📦 Requisitos no Funcionales
+python -m venv venv 
+source venv/bin/activate      # Windows: venv\Scripts\activate 
 
-- Escalabilidad horizontal  
-- Alta disponibilidad  
-- Baja latencia  
-- Seguridad end-to-end  
-- Observabilidad completa  
-- Configurabilidad por ambiente  
+Instalar dependencias: 
 
----
+pip install -r requirements.txt 
 
+Iniciar la API: 
 
+python main.py 
+ 
 
-# 🧪 Metodología de Trabajo – Scrum
+Salida esperada: 
 
-- Equipo de 6 integrantes  
-- Roles: Product Owner, Scrum Master, Dev Team  
-- Sprints semanales  
-- Backlogs, Kanban y dailies  
+Running on http://127.0.0.1:5000 
+Running on http://0.0.0.0:5000 
 
----
+ 
+ 
+ 
 
-# 📚 Documentación Técnica
+4) Probar la API con Postman 
 
-Incluye:
+Abre Postman → Create Request → Método POST 
 
-1. Introducción  
-2. Requerimientos  
-3. Arquitectura  
-4. APIs  
-5. Configuración de entornos  
-6. Instalación en Docker  
-7. Monitoreo y mantenimiento  
-8. Anexos y documentación generada  
+URL: 
 
----
+http://127.0.0.1:5000/sensor 
 
-# 🏁 Conclusiones
+Body → raw → JSON 
 
-El sistema desarrollado mejora la capacidad de respuesta del GAMC ante eventos ambientales críticos. La arquitectura moderna y escalable permite procesar datos en tiempo real, almacenar información históricamente y visualizar insights de manera clara y eficaz. La evolución del sistema es garantizada mediante metodologías ágiles como Scrum.
+{ 
+ "sensor_id": "sensor01", 
+ "timestamp": "2025-11-17T14:20:00Z", 
+ "type": "temperature", 
+ "value": 25.3, 
+ "unit": "C", 
+ "location": "lab" 
+} 
 
----
+✔ La API recibe los datos 
+✔ Los envía a Kafka 
 
-# 📖 Bibliografía
+🎧 5) Ejecutar el Consumer de Kafka 
 
-- Apache Kafka. (2025). *Documentation*.  
-- Datacamp. (2024). *Apache NiFi vs Apache Airflow*.  
-- Timescale. (2018). *TimescaleDB vs InfluxDB*.  
-- Grafana Labs. (s.f.). *Sensor Data Dashboard Example*.  
-- Ably. (2025). *WebSocket vs Socket.IO*.  
+En otra terminal: 
 
-______________
+python consumer.py 
+
+Salida esperada: 
+
+Listening to topic: sensor_data 
+Message received: {"sensor_id":"sensor01","value":25.3,...} 
+
+6) Flujo Completo del Sistema 
+
+[Cliente/Postman/App] 
+         ↓ 
+  API Python (Producer) 
+         ↓ 
+      Kafka Topic 
+         ↓ 
+  Consumer en Python 
+         ↓ 
+  BD / Dashboards / Procesamiento 
+
+7) Problemas Comunes y Soluciones 
+
+ECONNREFUSED 127.0.0.1:5000 
+
+Solución: 
+
+Verifica que la API esté encendida 
+
+Usa la IP que aparece en consola (a veces cambia) 
+
+Kafka no conecta 
+
+Solución: 
+
+docker compose logs kafka 
+
+ 
+8) Criterios de Aceptación (Performance) 
+
+API debe aceptar ≥ 100 req/s 
+
+Kafka debe recibir todos los mensajes sin pérdida 
+
+Latencia total del pipeline < 200 ms 
+
+Consumer debe procesar en tiempo real 
+
+Servicios deben funcionar con Docker o localmente 
+
+ 
+
+9) Extensiones Opcionales 
+
+Puedes integrar: 
+
+Almacenamiento en PostgreSQL, MongoDB o TimescaleDB 
+
+Dashboard con Grafana 
+
+Kafka UI para visualizar mensajes 
+
+Autor 
+
+Proyecto desarrollado por [Milton Martinez] 
+Universidad del Valle – Ingeniería de Sistemas e Informática 
+
+ 
