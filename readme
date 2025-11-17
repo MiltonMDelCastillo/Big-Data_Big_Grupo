@@ -4,6 +4,9 @@ kafka-python==2.0.2
 pandas==2.0.3
 flask==2.3.3
 flask-cors==4.0.0
+
+paho-mqtt==1.6.1 // para MQTT  
+
 //intalacion 
 🔧 INSTALACIÓN INDIVIDUAL DE CADA DEPENDENCIA
 1. Instalar kafka-python
@@ -18,6 +21,8 @@ pip install flask
 4. Instalar flask-cors
 bash
 pip install flask-cors
+
+pip install paho-mqtt
 ----------------------------------
 
 🚀 ORDEN DE EJECUCIÓN:
@@ -33,3 +38,7 @@ python producer_sensores.py
 # Terminal 3 - Ejecutar API (desde carpeta principal)  
 cd csv-producers
 python api_sensors.py
+-----------------------------------------
+para MQTT
+cd infra
+docker-compose -f docker-compose-mqtt.yml up -d
