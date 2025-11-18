@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Panel IoT</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-dark text-light">
+
+<div class="container mt-5">
+  <h1 class="text-center">Dashboard IoT & Big Data</h1>
+
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card p-3 bg-secondary">
+        <h4>Enviar datos manualmente</h4>
+        <form id="sendForm">
+          <input class="form-control mb-2" name="valor" placeholder="Ingrese valor id">
+          <select class="form-control mb-2" name="tipo_sensor" required>
+            <option value="">Seleccione tipo de sensor</option>
+            <option value="calidad_aire">Calidad de Aire</option>
+            <option value="sonido">Sonido</option>
+            <option value="soterrados">Soterrados</option>
+          <input class="form-control mb-2" name="device_name" placeholder="Device Name">
+          <input class="form-control mb-2" name="latitude" placeholder="Latitud">
+          <input class="form-control mb-2" name="longitude" placeholder="Longitud">
+          <input class="form-control mb-2" name="address" placeholder="Address">
+          <button class="btn btn-primary w-100">Enviar a Kafka</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card p-3 bg-secondary">
+        <h4>Datos recientes (MongoDB)</h4>
+        <pre id="datos" class="bg-dark text-success p-3 rounded"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("sendForm").onsubmit = async (e) => {
+    e.preventDefault();
+    
+    // Captura todos los valores del formulario
+    const data = {
+      valor: e.target.valor.value,
+      tipo_sensor: e.target.tipo_sensor.value,
+      device_name: e.target.device_name.value,
+      latitude: e.target.latitude.value,
+      longitude: e.target.longitude.value
+    };
+
+    await fetch("/api/enviar", { 
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(data)
+    });
+    
+    alert("Enviado!");
+  };
+</script>
+
+</body>
+</html>
