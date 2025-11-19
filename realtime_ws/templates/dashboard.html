@@ -1,64 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Panel IoT</title>
+  <meta charset="UTF-8">
+  <title>Dashboard IoT & Big Data</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body { background-color: #121212; color: #f1f1f1; }
+    .card { background-color: #1f1f1f; }
+    pre { background-color: #000; color: #0f0; padding: 1rem; border-radius: 0.5rem; max-height: 400px; overflow-y: auto; }
+  </style>
 </head>
-<body class="bg-dark text-light">
+<body>
 
 <div class="container mt-5">
-  <h1 class="text-center">Dashboard IoT & Big Data</h1>
+  <h1 class="text-center mb-4">Dashboard IoT & Big Data</h1>
 
-  <div class="row mt-4">
-    <div class="col-md-4">
-      <div class="card p-3 bg-secondary">
-        <h4>Enviar datos manualmente</h4>
-        <form id="sendForm">
-          <input class="form-control mb-2" name="valor" placeholder="Ingrese valor id">
-          <select class="form-control mb-2" name="tipo_sensor" required>
-            <option value="">Seleccione tipo de sensor</option>
-            <option value="calidad_aire">Calidad de Aire</option>
-            <option value="sonido">Sonido</option>
-            <option value="soterrados">Soterrados</option>
-          <input class="form-control mb-2" name="device_name" placeholder="Device Name">
-          <input class="form-control mb-2" name="latitude" placeholder="Latitud">
-          <input class="form-control mb-2" name="longitude" placeholder="Longitud">
-          <input class="form-control mb-2" name="address" placeholder="Address">
-          <button class="btn btn-primary w-100">Enviar a Kafka</button>
-        </form>
-      </div>
-    </div>
+  <div class="row">
+   <!-- Panel Formulario -->
+<div class="col-md-4 mb-3">
+  <div class="card p-3">
+    <h4 class="mb-3">Enviar datos manualmente</h4>
 
+    <form id="sendForm">
+
+      <input class="form-control mb-2" name="_id" placeholder="_id (opcional)">
+      
+      <input class="form-control mb-2" name="timestamp_ingesta" placeholder="timestamp_ingesta (ISO)">
+      <input class="form-control mb-2" name="fuente_archivo" placeholder="Fuente archivo">
+
+      <input class="form-control mb-2" name="device_name" placeholder="Device Name">
+      <input class="form-control mb-2" name="dev_eui" placeholder="dev_eui">
+      <input class="form-control mb-2" name="dev_addr" placeholder="dev_addr">
+      <input class="form-control mb-2" name="application_name" placeholder="application_name">
+
+      <input class="form-control mb-2" name="latitude" placeholder="Latitud" type="number" step="0.000001">
+      <input class="form-control mb-2" name="longitude" placeholder="Longitud" type="number" step="0.000001">
+      <input class="form-control mb-2" name="address" placeholder="Dirección">
+
+      <input class="form-control mb-2" name="description" placeholder="Descripción">
+
+      <input class="form-control mb-2" name="ts_medicion" placeholder="ts_medicion (ISO)">
+
+      <input class="form-control mb-2" name="co2" placeholder="CO2" type="number" step="0.01">
+      <input class="form-control mb-2" name="temperature" placeholder="Temperatura" type="number" step="0.01">
+      <input class="form-control mb-2" name="humidity" placeholder="Humedad" type="number" step="0.01">
+      <input class="form-control mb-2" name="pressure" placeholder="Presión" type="number" step="0.01">
+      <input class="form-control mb-2" name="battery" placeholder="Batería" type="number" step="0.01">
+
+      <input class="form-control mb-2" name="rssi_promedio" placeholder="RSSI promedio" type="number">
+      <input class="form-control mb-2" name="rssi_max" placeholder="RSSI max" type="number">
+      <input class="form-control mb-2" name="rssi_min" placeholder="RSSI min" type="number">
+
+      <select class="form-control mb-2" name="tipo_sensor" required>
+        <option value="">Seleccione tipo de sensor</option>
+        <option value="calidad_aire">Calidad de Aire</option>
+        <option value="sonido">Sonido</option>
+        <option value="soterrados">Soterrados</option>
+      </select>
+
+      <button class="btn btn-primary w-100">Enviar a Kafka</button>
+    </form>
+
+  </div>
+</div>
+
+
+    <!-- Panel Datos -->
     <div class="col-md-8">
-      <div class="card p-3 bg-secondary">
-        <h4>Datos recientes (MongoDB)</h4>
-        <pre id="datos" class="bg-dark text-success p-3 rounded"></pre>
+      <div class="card p-3">
+        <h4 class="mb-3">Datos recientes (MongoDB)</h4>
+        <pre id="datos">Cargando datos...</pre>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+  // ===== Enviar datos manualmente a Kafka/Backend =====
   document.getElementById("sendForm").onsubmit = async (e) => {
     e.preventDefault();
-    
-    // Captura todos los valores del formulario
     const data = {
       valor: e.target.valor.value,
       tipo_sensor: e.target.tipo_sensor.value,
       device_name: e.target.device_name.value,
       latitude: e.target.latitude.value,
-      longitude: e.target.longitude.value
+      longitude: e.target.longitude.value,
+      address: e.target.address.value
     };
 
-    await fetch("/api/enviar", { 
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(data)
-    });
-    
-    alert("Enviado!");
+    try {
+      const res = await fetch("/api/enviar", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if(res.ok) alert("✅ Datos enviados correctamente!");
+      else alert("❌ Error enviando datos.");
+      e.target.reset();
+    } catch(err) {
+      console.error(err);
+      alert("❌ Error enviando datos.");
+    }
   };
+
+  // ===== Mostrar datos limpios de MongoDB =====
+  async function actualizarDatos() {
+    try {
+      const res = await fetch("/api/datos");
+      const datos = await res.json();
+      document.getElementById("datos").textContent = JSON.stringify(datos, null, 2);
+    } catch(err) {
+      document.getElementById("datos").textContent = "❌ Error cargando datos.";
+      console.error(err);
+    }
+  }
+
+  // Actualizar cada 5 segundos
+  setInterval(actualizarDatos, 5000);
+  actualizarDatos();
 </script>
 
 </body>
