@@ -1,9 +1,9 @@
 import React from 'react'
-import Analitica from '../../analitica/Analitica'
+import DashboardSensores from '../../secciones/dashboardSensores/DashboardSensores'
 
 function Products() {
   return (
-    <Analitica/>
+    <DashboardSensores mode="charts" />
   )
 }
 
