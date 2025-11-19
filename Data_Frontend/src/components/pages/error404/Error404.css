@@ -1,0 +1,119 @@
+/* --- Fondo general futurista --- */
+.error-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #001a33 0%, #000814 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  color: #00FFFF;
+}
+
+/* --- Efecto de resplandor animado --- */
+.error-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%);
+  animation: pulse 4s ease-in-out infinite;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+/* --- Tarjeta principal --- */
+.error-card {
+  position: relative;
+  z-index: 2;
+  background: rgba(10, 15, 30, 0.9);
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(0,255,255,0.2);
+  backdrop-filter: blur(12px);
+  padding: 60px 40px;
+  text-align: center;
+  width: 90%;
+  max-width: 420px;
+  transition: all 0.4s ease;
+}
+
+.error-card:hover {
+  box-shadow: 0 0 45px rgba(0,255,255,0.4);
+  transform: translateY(-5px);
+}
+
+/* --- Código 404 grande --- */
+.error-code {
+  font-size: 100px;
+  margin: 0;
+  color: #00FFFF;
+  text-shadow: 0 0 15px #00FFFF, 0 0 30px #00FFFF;
+  font-weight: bold;
+  letter-spacing: 4px;
+  animation: glow-flicker 3s infinite ease-in-out;
+}
+
+@keyframes glow-flicker {
+  0%, 100% { opacity: 1; text-shadow: 0 0 20px #00FFFF, 0 0 40px #00FFFF; }
+  50% { opacity: 0.7; text-shadow: 0 0 10px #00FFFF; }
+}
+
+/* --- Título y texto --- */
+.error-title {
+  font-size: 24px;
+  margin-top: 10px;
+  color: #00FFFF;
+  text-shadow: 0 0 10px rgba(0,255,255,0.5);
+}
+
+.error-message {
+  font-size: 15px;
+  color: rgba(200,255,255,0.8);
+  margin: 15px 0 30px 0;
+}
+
+/* --- Botón futurista --- */
+.back-home-btn {
+  display: inline-block;
+  padding: 12px 30px;
+  background: transparent;
+  border: 2px solid #00FFFF;
+  border-radius: 12px;
+  color: #00FFFF;
+  text-decoration: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.back-home-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, #00FFFF, transparent);
+  transition: 0.5s;
+  z-index: -1;
+}
+
+.back-home-btn:hover::before {
+  left: 100%;
+}
+
+.back-home-btn:hover {
+  background: rgba(0, 255, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 0 20px #00FFFF;
+  transform: translateY(-3px);
+}

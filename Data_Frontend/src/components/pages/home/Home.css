@@ -1,0 +1,91 @@
+.TransicionesModernas { 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: calc(100vh - 80px);
+  padding: 50px 20px;
+  /* Gradiente con tus colores principales */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+   /* Cian luminoso principal para el texto */
+}
+
+
+
+/* Fondo degradado moderno bonito */
+
+.fondoImagen {
+  width: 100%;
+  min-height: 70vh; /* Ajusta según el alto que quieras */
+  background-size: cover; /* La imagen cubre todo el contenedor */
+  background-position: center; /* Centra la imagen */
+  background-repeat: no-repeat; /* Evita que se repita */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem; /* Espacio interno */
+  padding-bottom: 13rem;
+  box-sizing: border-box;
+}
+
+/* Opcional: oscurecer la imagen para que el texto resalte */
+.fondoImagen::before {
+  content: '';
+  position: absolute;
+  background-image: url('/src/assets/imagenes/eventoModerno.jpg');
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  z-index: 0;
+    /* Imagen + capa negra para oscurecer */
+  background: 
+    linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.5), rgba(0,0,0,0)), /* capa negra oscura */
+    url('/src/assets/imagenes/eventoModerno.jpg') center/cover no-repeat;
+  /* Gradiente de máscara para que la parte inferior sea transparente */
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 90%);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: cover;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+  mask-repeat: no-repeat;
+  mask-size: cover;
+}
+
+/* Asegúrate que Principal y Tarjetas estén sobre la capa */
+.fondoImagen > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* 🔹 Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  .fondoImagen {
+    min-height: 90vh; /* Más alto para móviles */
+    padding: 2rem;
+    padding-bottom: 2rem;
+    justify-content: flex-start; /* Subir contenido */
+  }
+
+  .fondoImagen::before {
+    background: 
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0)),
+      url('/src/assets/imagenes/eventoModerno.jpg') center/cover no-repeat;
+    height: 100%; /* Ajusta el recorte */
+  }
+}
+
+/* 🔹 Ajuste extra para pantallas muy pequeñas (celulares de menos de 480px) */
+@media (max-width: 480px) {
+  .fondoImagen {
+    padding: 1.5rem;
+    min-height: 100vh;
+  }
+
+  .fondoImagen::before {
+    background: 
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)),
+      url('/src/assets/imagenes/eventoModerno.jpg') center/cover no-repeat;
+      
+  }
+}

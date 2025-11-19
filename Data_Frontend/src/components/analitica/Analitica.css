@@ -1,0 +1,68 @@
+/* Prefijo: ana- */
+
+.ana-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  color: #c01e1e;
+  font-family: 'Roboto', sans-serif;
+}
+
+.ana-card {
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid #4b6cb7;
+  box-shadow: 0 0 20px #4b6cb7, 0 0 40px #182848;
+  border-radius: 16px;
+}
+
+.ana-header {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ana-title {
+  font-weight: 700;
+  color: #000000;
+  text-shadow: 0 0 10px #4b6cb7;
+}
+
+.ana-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ana-filter-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #4b6cb7;
+  border-radius: 10px;
+  color: #ffffff;
+  padding: 6px 12px;
+  width: 180px;
+  transition: 0.3s;
+}
+
+.ana-filter-input:hover,
+.ana-filter-input:focus {
+  border-color: #ff6ec7;
+  box-shadow: 0 0 10px #ff6ec7;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ana-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.ana-loading-text {
+  text-align: center;
+  color: #ff6ec7;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-top: 50px;
+  text-shadow: 0 0 8px #ff6ec7;
+}
