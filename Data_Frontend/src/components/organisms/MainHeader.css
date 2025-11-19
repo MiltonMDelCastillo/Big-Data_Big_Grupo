@@ -1,0 +1,88 @@
+/* Fondo translúcido con efecto vidrio */
+.main-header-modern {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  backdrop-filter: blur(10px);
+  background: rgba(10, 15, 30, 0.5); /* oscuro translúcido */
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+  z-index: 100;
+  transition: background 0.3s ease;
+}
+
+/* Contenedor */
+.header-container-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+}
+
+/* Navegación */
+.menu-nav-modern {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.menu-nav-modern.open {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 70px;
+  right: 0;
+  background: rgba(10, 15, 30, 0.9);
+  width: 100%;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+}
+
+/* Botón hamburguesa */
+.menu-toggle-modern {
+  display: none;
+  background: none;
+  border: none;
+  color: #00f2fe;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle-modern {
+    display: block;
+  }
+
+  .menu-nav-modern {
+    display: none;
+  }
+}
+
+/* Botón Login */
+.login-btn-modern {
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #00f2fe, #4facfe);
+  color: #0A0F1E;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.login-btn-modern:hover {
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.7);
+  transform: scale(1.05);
+}
+
+/* Cuando el menú se abre, oculta el botón */
+@media (max-width: 768px) {
+  .header-actions-modern {
+    display: none;
+  }
+
+  .menu-nav-modern.open + .header-actions-modern {
+    display: block;
+    margin-top: 10px;
+  }
+}
