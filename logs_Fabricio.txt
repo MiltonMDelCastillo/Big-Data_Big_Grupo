@@ -1,0 +1,5 @@
+51385d2 | FabriCamacho | 2025-11-12 | Se actualizo el readme con la documentacion correcta
+b49c7c5 | FabriCamacho | 2025-11-05 | Se termino la parte del storage con el hosteo
+7837ec5 | MiltonMDelCastillo | 2025-10-29 | modificacion de asigancion de tareas semana 2
+4baf547 | MiltonMDelCastillo | 2025-10-27 | Documentacion V1
+ae1b2b5 | MiltonMDelCastillo | 2025-10-27 | Initial commit
