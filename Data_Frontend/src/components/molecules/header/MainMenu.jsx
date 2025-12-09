@@ -7,9 +7,7 @@ const MainMenu = ({ onLinkClick }) => {
   const links = [
     { to: '/', label: 'Inicio' },
     { to: '/productos', label: 'Analítica' },
-    { to: '/contacto', label: 'Contacto' },
-    { to: '/acerca', label: 'Acerca de' },
-    
+    { to: '/sensores', label: 'Aplicación de Sensores' },
   ]
 
   return (

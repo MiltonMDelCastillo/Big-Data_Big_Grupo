@@ -1,0 +1,84 @@
+/* Distribucion.css */
+
+/* -------------------------------------------
+   Contenedor Principal de la Tarjeta
+   ------------------------------------------- */
+.distribucion-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease-in-out;
+    margin-top: 30px; 
+    border-radius: 12px;
+}
+
+/* -------------------------------------------
+   Estilos del Encabezado y Selectores
+   ------------------------------------------- */
+.distribucion-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee; 
+}
+
+.distribucion-header-title {
+    font-weight: 600 !important;
+    color: #333; 
+    font-size: 1.25rem; 
+}
+
+/* -------------------------------------------
+   Contenedor del Gráfico
+   ------------------------------------------- */
+.distribucion-chart-container {
+    position: relative;
+    height: 400px; 
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* -------------------------------------------
+   Estilos de Mensajes (No Data, Desactivado)
+   ------------------------------------------- */
+
+/* Mensaje de Restricción/Desactivado */
+.distribucion-restriction-message {
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 500;
+
+    background-color: #fcebeb; 
+    color: #cc0000; 
+    border: 1px solid #cc0000;
+}
+
+/* Mensaje de No Data */
+.distribucion-no-data-message {
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 500;
+
+    background-color: #fff3cd; 
+    color: #856404; 
+    border: 1px solid #ffeeba;
+}
+
+/* Estilos para la lista dentro del mensaje de No Data */
+.distribucion-no-data-message ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    text-align: left;
+    display: inline-block;
+}
+
+.distribucion-no-data-message li {
+    margin-bottom: 5px;
+}

@@ -5,6 +5,7 @@ import Products from '../components/pages/productos/Products';
 import App from '../components/templates/App';
 import Home from '../components/pages/home/Home';
 import Login from '../components/pages/login/Login';
+import Sensores from '../components/pages/sensores/Sensores';
 
 const router = createHashRouter([  // 👈 también aquí
   {
@@ -19,6 +20,10 @@ const router = createHashRouter([  // 👈 también aquí
       {
         path: "/productos",
         element: <Products />,
+      },
+      {
+        path: "/sensores",
+        element: <Sensores />,
       },
     ],
   },

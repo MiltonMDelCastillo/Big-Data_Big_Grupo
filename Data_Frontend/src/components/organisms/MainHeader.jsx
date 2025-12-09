@@ -21,9 +21,6 @@ const MainHeader = () => {
           <MainMenu onLinkClick={() => setMenuOpen(false)} />
         </nav>
 
-        <div className="header-actions-modern">
-          <Link to="/login" className="login-btn-modern">Ingresar</Link>
-        </div>
       </div>
     </header>
   );

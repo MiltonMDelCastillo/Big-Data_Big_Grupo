@@ -1,0 +1,25 @@
+.sensores-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.sensores-hero {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+  padding: 80px 20px;
+  text-align: center;
+  color: white;
+}
+
+.sensores-title {
+  font-size: 3rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 20px !important;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sensores-subtitle {
+  font-size: 1.5rem !important;
+  opacity: 0.95;
+  font-weight: 300 !important;
+}
+

@@ -1,13 +1,10 @@
 import React from "react";
 import "./Home.css";
-import ConectarMongo from "../../secciones/conectarMongo/ConectarMongo";
+import DashboardSensores from "../../secciones/dashboardSensores/DashboardSensores";
 
 const Home = () => {
-
-
   return (
-    <ConectarMongo/>
-    
+    <DashboardSensores mode="table" />
   );
 };
 

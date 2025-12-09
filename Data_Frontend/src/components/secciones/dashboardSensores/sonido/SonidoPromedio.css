@@ -1,0 +1,65 @@
+/*
+ * SonidoPromedio.css
+ * Estilos para el componente de Gráfico de Sonido
+ */
+
+/* Contenedor principal de la tarjeta */
+.sonido-card {
+    border: 1px solid #e0e0e0;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.sonido-card:hover {
+    box-shadow: 0 8px 17px rgba(0, 0, 0, 0.15); /* Efecto de elevación al pasar el ratón */
+}
+
+/* Encabezado y Selector de Base de Datos */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+/* Estilo para el título */
+.header-title {
+    color: #1976d2; /* Color primario de Material UI */
+    font-weight: 700 !important;
+}
+
+/* Mensaje de Restricción (PostgreSQL) */
+.db-restriction-message {
+    padding: 20px;
+    text-align: center;
+    color: #d32f2f; /* Rojo de error */
+    border: 2px solid #ffcdd2; 
+    border-radius: 8px;
+    background-color: #ffebee; /* Rojo muy claro */
+    font-weight: 600;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Mensaje de No Hay Datos (MongoDB) */
+.no-data-message {
+    padding: 20px;
+    text-align: center;
+    color: #424242; /* Gris oscuro */
+    border: 1px solid #bdbdbd;
+    border-radius: 8px;
+    background-color: #f5f5f5; /* Gris claro */
+    margin-top: 20px;
+}
+
+/* Estilo para el contenedor del gráfico */
+.chart-container {
+    min-height: 350px;
+    padding-top: 10px;
+}
+
+/* Estilo para el selector de Base de Datos */
+.db-selector-input .MuiOutlinedInput-root {
+    border-radius: 8px;
+}
