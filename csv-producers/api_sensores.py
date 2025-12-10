@@ -12,6 +12,7 @@ except ImportError as e:
     print(f"❌ Kafka no disponible: {e}")
     KAFKA_AVAILABLE = False
 
+#Cositas para ahcer 
 app = Flask(__name__) 
 CORS(app)  # Permitir requests desde frontend
 
