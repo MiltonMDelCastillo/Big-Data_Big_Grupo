@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 // 🛑 LIBRERÍA INSTALADA EN EL PASO ANTERIOR
 import 'chartjs-adapter-date-fns'; 
-
+// 🛑 LIBRERÍA INSTALADA EN EL PASO ANTERIOR
 import { 
     Card, CardContent, Box, Typography, CircularProgress, 
     Select, MenuItem, FormControl, InputLabel 
