@@ -5,7 +5,8 @@ import './MainMenu.css'
 // eslint-disable-next-line react/prop-types
 const MainMenu = ({ onLinkClick }) => {
   const links = [
-    { to: '/', label: 'Inicio' },
+    { to: '/', label: 'Predicciones' },
+    { to: '/dashboard', label: 'Dashboard' },
     { to: '/productos', label: 'Analítica' },
     { to: '/sensores', label: 'Aplicación de Sensores' },
   ]

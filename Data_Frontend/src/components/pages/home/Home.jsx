@@ -4,7 +4,7 @@ import DashboardSensores from "../../secciones/dashboardSensores/DashboardSensor
 
 const Home = () => {
   return (
-    <DashboardSensores mode="table" />
+    <DashboardSensores mode="charts" />
   );
 };
 

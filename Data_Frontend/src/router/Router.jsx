@@ -6,6 +6,7 @@ import App from '../components/templates/App';
 import Home from '../components/pages/home/Home';
 import Login from '../components/pages/login/Login';
 import Sensores from '../components/pages/sensores/Sensores';
+import Predicciones from '../components/pages/predicciones/Predicciones';
 
 const router = createHashRouter([  // 👈 también aquí
   {
@@ -15,11 +16,15 @@ const router = createHashRouter([  // 👈 también aquí
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <Predicciones />,
       },
       {
         path: "/productos",
         element: <Products />,
+      },
+      {
+        path: "/dashboard",
+        element: <Home />,
       },
       {
         path: "/sensores",

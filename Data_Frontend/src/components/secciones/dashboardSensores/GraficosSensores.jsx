@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Card,
@@ -29,6 +29,7 @@ import {
   AreaChart,
   Area,
   ComposedChart,
+  ReferenceLine,
 } from "recharts";
 
 const API_BASE = "http://localhost:5000";
@@ -42,6 +43,14 @@ const chartTypes = [
   { value: "area", label: "Área" },
   { value: "scatter", label: "Dispersión" },
   { value: "composed", label: "Combinado" },
+];
+
+const predictionOptions = [
+  { value: 0, label: "Sin predicción" },
+  { value: 1, label: "1 día" },
+  { value: 7, label: "1 semana" },
+  { value: 30, label: "1 mes" },
+  { value: 365, label: "1 año" },
 ];
 
 // Función unificada para transformar datos (MongoDB y PostgreSQL)
@@ -76,6 +85,16 @@ const transformData = (rawData, collectionType) => {
         name: d.device_name || "Sin nombre",
         address: d.address || "",
         timestamp: timestamp || new Date(),
+        ts: timestamp ? timestamp.getTime() : Date.now(),
+        label: timestamp
+          ? timestamp.toLocaleString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : dateStr,
         date: dateStr,
       };
 
@@ -125,6 +144,7 @@ export default function GraficosSensores({ databaseType, collection }) {
   const [loading, setLoading] = useState(true);
   const [chartType, setChartType] = useState("line");
   const [selectedMetric, setSelectedMetric] = useState("");
+  const [predictionHorizon, setPredictionHorizon] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,9 +152,10 @@ export default function GraficosSensores({ databaseType, collection }) {
       try {
         let url = "";
         if (databaseType === "mongodb" && collection) {
-          url = `${API_BASE}/api/mongodb/stats/${collection}`;
+          // Usar datos crudos para mayor variabilidad
+          url = `${API_BASE}/api/mongodb/${collection}?page=1&limit=500`;
         } else if (databaseType === "postgresql" && collection) {
-          url = `${API_BASE}/api/postgresql/stats/${collection}`;
+          url = `${API_BASE}/api/postgresql/${collection}?page=1&limit=500`;
         } else {
           setData([]);
           setLoading(false);
@@ -166,11 +187,10 @@ export default function GraficosSensores({ databaseType, collection }) {
 
         // Establecer métrica por defecto
         if (transformedData.length > 0 && !selectedMetric) {
-          const firstRow = transformedData[0];
           if (collectionType === "soterrados") {
             setSelectedMetric("distance");
           } else if (collectionType === "sonido") {
-            setSelectedMetric("laeq");
+            setSelectedMetric("lai_max");
           } else if (collectionType === "calidad-aire") {
             setSelectedMetric("co2");
           }
@@ -185,7 +205,9 @@ export default function GraficosSensores({ databaseType, collection }) {
     };
 
     fetchData();
-  }, [databaseType, collection]);
+    const interval = setInterval(fetchData, 120000); // refresco automático cada 2 minutos
+    return () => clearInterval(interval);
+  }, [databaseType, collection, selectedMetric]);
 
   const getAvailableMetrics = () => {
     if (data.length === 0) return [];
@@ -196,29 +218,53 @@ export default function GraficosSensores({ databaseType, collection }) {
     return metrics;
   };
 
-  // Agrupar datos por dispositivo para gráficos de líneas múltiples
-  const groupDataByDevice = () => {
-    if (!selectedMetric) return [];
-    
+  // Agrupar datos por dispositivo; promediamos por día (pero tomamos hasta 10 días recientes)
+  const groupDataByDevice = (metricKey) => {
+    if (!metricKey) return [];
+
     const grouped = {};
     data.forEach((d) => {
       const device = d.deviceName || d.name;
-      if (!grouped[device]) {
-        grouped[device] = [];
-      }
+      if (!grouped[device]) grouped[device] = [];
       grouped[device].push({
         date: d.date || d.timestamp?.toLocaleDateString() || "",
+        label: d.label || d.date || "",
+        ts: d.ts || d.timestamp?.getTime() || Date.now(),
         timestamp: d.timestamp,
-        value: d[selectedMetric] || 0,
+        value: d[metricKey] || 0,
         deviceName: device,
       });
     });
 
-    // Convertir a array de series
-    return Object.keys(grouped).map((device) => ({
-      deviceName: device,
-      data: grouped[device].sort((a, b) => a.timestamp - b.timestamp),
-    }));
+    // Agregar por día promedio (siempre para líneas/áreas) y recortar a últimos 10 días
+    const aggregateByDay = (arr) => {
+      const bucket = {};
+      arr.forEach((p) => {
+        const dayKey = p.date;
+        if (!bucket[dayKey]) bucket[dayKey] = { sum: 0, count: 0, ts: p.ts, label: p.date };
+        bucket[dayKey].sum += p.value;
+        bucket[dayKey].count += 1;
+        bucket[dayKey].ts = Math.min(bucket[dayKey].ts, p.ts);
+      });
+      const aggregated = Object.entries(bucket)
+        .map(([day, info]) => ({
+          date: day,
+          label: day,
+          ts: info.ts,
+          timestamp: new Date(info.ts),
+          value: info.count > 0 ? info.sum / info.count : 0,
+        }))
+        .sort((a, b) => a.ts - b.ts);
+
+      // Tomar los últimos 10 días para que siempre haya suficientes puntos y predicción
+      return aggregated.slice(-10);
+    };
+
+    return Object.keys(grouped).map((device) => {
+      const series = grouped[device].sort((a, b) => a.ts - b.ts);
+      const dataSeries = aggregateByDay(series);
+      return { deviceName: device, data: dataSeries };
+    });
   };
 
   // Preparar datos para gráficos de barras agrupadas por dispositivo
@@ -241,6 +287,91 @@ export default function GraficosSensores({ databaseType, collection }) {
         ? deviceAverages[device].sum / deviceAverages[device].count 
         : 0,
     }));
+  };
+
+  const computeBaseline = useMemo(() => {
+    if (!selectedMetric || data.length === 0) return null;
+    const values = data
+      .map((d) => d[selectedMetric])
+      .filter((v) => typeof v === "number" && !Number.isNaN(v));
+    if (values.length === 0) return null;
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    return avg;
+  }, [data, selectedMetric]);
+
+  const predictionLabel = useMemo(() => {
+    const option = predictionOptions.find((o) => o.value === predictionHorizon);
+    return option ? option.label : "";
+  }, [predictionHorizon]);
+
+// Pequeño "modelo ML" liviano: regresión lineal + variabilidad según varianza reciente.
+const addPredictionsToSeries = (series) => {
+    if (!predictionHorizon || predictionHorizon <= 0) return series;
+
+  const predictValue = (points) => {
+    if (!points || points.length === 0) return 0;
+    const recent = points.slice(-10);
+    if (recent.length < 2) return recent[recent.length - 1].value || 0;
+    const baseDate = recent[0].timestamp.getTime();
+    const xs = recent.map((p) => (p.timestamp.getTime() - baseDate) / (1000 * 60 * 60 * 24)); // días
+    const ys = recent.map((p) => p.value || 0);
+    const n = xs.length;
+    const sumX = xs.reduce((a, b) => a + b, 0);
+    const sumY = ys.reduce((a, b) => a + b, 0);
+    const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+    const sumXX = xs.reduce((acc, x) => acc + x * x, 0);
+    const denom = n * sumXX - sumX * sumX;
+    const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+    const intercept = (sumY - slope * sumX) / n;
+    const varY = ys.reduce((acc, v) => acc + Math.pow(v - sumY / n, 2), 0) / n;
+    const std = Math.sqrt(varY);
+    const targetX = xs[xs.length - 1] + predictionHorizon;
+    // Añadimos un pequeño término proporcional a la desviación estándar para evitar predicciones planas
+    return intercept + slope * targetX + 0.15 * std;
+  };
+
+    return series.map((s) => {
+      const ordered = [...s.data].sort((a, b) => a.timestamp - b.timestamp);
+      if (ordered.length === 0) return s;
+    const predictedValue = predictValue(ordered);
+    const last = ordered[ordered.length - 1];
+
+      const futurePoints = [];
+      for (let i = 1; i <= predictionHorizon; i++) {
+        const futureDate = new Date(last.timestamp);
+        futureDate.setDate(futureDate.getDate() + i);
+        futurePoints.push({
+          date: futureDate.toLocaleDateString("es-ES"),
+          timestamp: futureDate,
+        value: predictedValue,
+          deviceName: s.deviceName,
+          predicted: true,
+        });
+      }
+
+      return {
+        ...s,
+        data: [...ordered, ...futurePoints],
+      };
+    });
+  };
+
+  const addPredictionToAggregated = (chartData) => {
+    if (!predictionHorizon || predictionHorizon <= 0 || chartData.length === 0) return chartData;
+    const metric = selectedMetric;
+    const values = chartData.map((entry) => entry[metric] || 0);
+    const first = values[0] || 0;
+    const last = values[values.length - 1] || 0;
+    const slope = values.length > 1 ? (last - first) / (values.length - 1) : 0;
+    const predicted = last + slope * predictionHorizon;
+    return [
+      ...chartData,
+      {
+        name: `Predicción (+${predictionLabel})`,
+        [metric]: predicted,
+        predicted: true,
+      },
+    ];
   };
 
   const renderChart = () => {
@@ -267,6 +398,7 @@ export default function GraficosSensores({ databaseType, collection }) {
 
     const metrics = getAvailableMetrics();
     const metric = selectedMetric || metrics[0] || "value";
+    const baselineValue = computeBaseline;
 
     if (!metrics.includes(metric)) {
       setSelectedMetric(metrics[0] || "");
@@ -275,31 +407,68 @@ export default function GraficosSensores({ databaseType, collection }) {
 
     switch (chartType) {
       case "line":
-        const lineSeries = groupDataByDevice();
+        // Agregamos todas las series en una sola línea (promedio diario) con un solo color
+        const lineSeries = addPredictionsToSeries(groupDataByDevice(metric));
         if (lineSeries.length > 0) {
-          // Crear un mapa de todas las fechas únicas
-          const allDates = new Set();
+          const bucket = {};
           lineSeries.forEach((series) => {
-            series.data.forEach((point) => allDates.add(point.date));
-          });
-          const sortedDates = Array.from(allDates).sort();
-
-          // Preparar datos para el gráfico
-          const lineChartData = sortedDates.map((date) => {
-            const point = { date };
-            lineSeries.forEach((series) => {
-              const dataPoint = series.data.find((d) => d.date === date);
-              point[series.deviceName] = dataPoint ? dataPoint.value : null;
+            series.data.forEach((p) => {
+              const tsKey = p.ts || p.timestamp?.getTime();
+              const labelKey = p.label || p.date || "";
+              if (!tsKey) return;
+              if (!bucket[tsKey]) {
+                bucket[tsKey] = { sum: 0, count: 0, ts: tsKey, label: labelKey };
+              }
+              bucket[tsKey].sum += p.value;
+              bucket[tsKey].count += 1;
             });
-            return point;
           });
+
+          const aggregatedLine = Object.values(bucket)
+            .map((b) => ({
+              ts: b.ts,
+              label: b.label,
+              value: b.count ? b.sum / b.count : 0,
+            }))
+            .sort((a, b) => a.ts - b.ts);
+
+          // Serie de predicción separada para no alterar la curva original
+          let predictionLine = [];
+          if (predictionHorizon && predictionHorizon > 0 && aggregatedLine.length > 1) {
+            const recent = aggregatedLine.slice(-10);
+            const baseDate = recent[0].ts;
+            const xs = recent.map((p) => (p.ts - baseDate) / (1000 * 60 * 60 * 24));
+            const ys = recent.map((p) => p.value || 0);
+            const n = xs.length;
+            const sumX = xs.reduce((a, b) => a + b, 0);
+            const sumY = ys.reduce((a, b) => a + b, 0);
+            const sumXY = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+            const sumXX = xs.reduce((acc, x) => acc + x * x, 0);
+            const denom = n * sumXX - sumX * sumX;
+            const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
+            const intercept = (sumY - slope * sumX) / n;
+            const targetX = xs[xs.length - 1] + predictionHorizon;
+            const varY = ys.reduce((acc, v) => acc + Math.pow(v - sumY / n, 2), 0) / n;
+            const std = Math.sqrt(varY);
+            const predictedValue = intercept + slope * targetX + 0.15 * std;
+            const lastTs = aggregatedLine[aggregatedLine.length - 1].ts;
+            const futureTs = lastTs + predictionHorizon * 24 * 60 * 60 * 1000;
+            predictionLine = [
+              aggregatedLine[aggregatedLine.length - 1],
+              {
+                ts: futureTs,
+                label: new Date(futureTs).toLocaleDateString("es-ES"),
+                value: predictedValue,
+              },
+            ];
+          }
 
           return (
             <ResponsiveContainer width="100%" height={500}>
-              <LineChart data={lineChartData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
+              <LineChart data={aggregatedLine} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis 
-                  dataKey="date" 
+                  dataKey="label" 
                   angle={-45} 
                   textAnchor="end" 
                   height={100}
@@ -318,18 +487,40 @@ export default function GraficosSensores({ databaseType, collection }) {
                   wrapperStyle={{ paddingTop: "20px" }}
                   iconType="line"
                 />
-                {lineSeries.slice(0, 8).map((series, index) => (
-                  <Line
-                    key={series.deviceName}
-                    type="monotone"
-                    dataKey={series.deviceName}
-                    stroke={COLORS[index % COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 6 }}
-                    name={series.deviceName}
+                {baselineValue !== null && (
+                  <ReferenceLine
+                    y={baselineValue}
+                    stroke="#ff4d4f"
+                    strokeWidth={3}
+                    strokeDasharray="4 4"
+                    label={{ value: "Límite / normal", position: "insideTopRight", fill: "#ff4d4f", fontWeight: 700 }}
                   />
-                ))}
+                )}
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#0077ff"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Promedio diario"
+                  connectNulls
+                />
+                {predictionLine.length === 2 && (
+                  <Line
+                    type="monotone"
+                    data={predictionLine}
+                    dataKey="value"
+                    stroke="#ffa500"
+                    strokeWidth={3}
+                    strokeDasharray="6 6"
+                    strokeOpacity={0.65}
+                    dot={{ r: 5, stroke: "#ffa500", fill: "white", strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                    name="Predicción"
+                    connectNulls
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           );
@@ -337,7 +528,7 @@ export default function GraficosSensores({ databaseType, collection }) {
         break;
 
       case "bar":
-        const barData = prepareBarChartData();
+        const barData = addPredictionToAggregated(prepareBarChartData());
         return (
           <ResponsiveContainer width="100%" height={500}>
             <BarChart data={barData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
@@ -359,6 +550,15 @@ export default function GraficosSensores({ databaseType, collection }) {
                 contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: "4px" }}
               />
               <Legend />
+              {baselineValue !== null && (
+                <ReferenceLine
+                  y={baselineValue}
+                  stroke="#ff4d4f"
+                  strokeWidth={3}
+                  strokeDasharray="4 4"
+                  label={{ value: "Límite / normal", position: "insideTopRight", fill: "#ff4d4f", fontWeight: 700 }}
+                />
+              )}
               <Bar 
                 dataKey={metric} 
                 fill="#8884d8"
@@ -373,10 +573,12 @@ export default function GraficosSensores({ databaseType, collection }) {
         );
 
       case "pie":
-        const pieData = prepareBarChartData().slice(0, 10).map((d) => ({
-          name: d.name,
-          value: d[metric] || 0,
-        }));
+        const pieData = addPredictionToAggregated(prepareBarChartData())
+          .slice(0, 10)
+          .map((d) => ({
+            name: d.name,
+            value: d[metric] || 0,
+          }));
         return (
           <ResponsiveContainer width="100%" height={500}>
             <PieChart>
@@ -403,18 +605,27 @@ export default function GraficosSensores({ databaseType, collection }) {
         );
 
       case "area":
-        const areaSeries = groupDataByDevice();
+        const areaSeries = addPredictionsToSeries(groupDataByDevice(metric));
         if (areaSeries.length > 0) {
-          const allDates = new Set();
+          const tsLabelMap = {};
+          const allTs = new Set();
           areaSeries.forEach((series) => {
-            series.data.forEach((point) => allDates.add(point.date));
+            series.data.forEach((point) => {
+              const tsKey = point.ts || point.timestamp?.getTime();
+              if (tsKey) {
+                allTs.add(tsKey);
+                tsLabelMap[tsKey] = point.label || point.date || "";
+              }
+            });
           });
-          const sortedDates = Array.from(allDates).sort();
+          const sortedTs = Array.from(allTs).sort((a, b) => a - b);
 
-          const areaChartData = sortedDates.map((date) => {
-            const point = { date };
+          const areaChartData = sortedTs.map((ts) => {
+            const point = { ts, label: tsLabelMap[ts] || "" };
             areaSeries.forEach((series) => {
-              const dataPoint = series.data.find((d) => d.date === date);
+              const dataPoint = series.data.find(
+                (d) => (d.ts || d.timestamp?.getTime()) === ts
+              );
               point[series.deviceName] = dataPoint ? dataPoint.value : null;
             });
             return point;
@@ -441,6 +652,15 @@ export default function GraficosSensores({ databaseType, collection }) {
                   contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: "4px" }}
                 />
                 <Legend />
+                {baselineValue !== null && (
+                  <ReferenceLine
+                    y={baselineValue}
+                    stroke="#ff4d4f"
+                    strokeWidth={3}
+                    strokeDasharray="4 4"
+                    label={{ value: "Límite / normal", position: "insideTopRight", fill: "#ff4d4f", fontWeight: 700 }}
+                  />
+                )}
                 {areaSeries.slice(0, 8).map((series, index) => (
                   <Area
                     key={series.deviceName}
@@ -451,6 +671,7 @@ export default function GraficosSensores({ databaseType, collection }) {
                     fill={COLORS[index % COLORS.length]}
                     fillOpacity={0.6}
                     name={series.deviceName}
+                    connectNulls
                   />
                 ))}
               </AreaChart>
@@ -490,7 +711,7 @@ export default function GraficosSensores({ databaseType, collection }) {
         );
 
       case "composed":
-        const composedData = prepareBarChartData();
+        const composedData = addPredictionToAggregated(prepareBarChartData());
         return (
           <ResponsiveContainer width="100%" height={500}>
             <ComposedChart data={composedData} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
@@ -512,6 +733,15 @@ export default function GraficosSensores({ databaseType, collection }) {
                 contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: "4px" }}
               />
               <Legend />
+              {baselineValue !== null && (
+                <ReferenceLine
+                  y={baselineValue}
+                  stroke="#ff4d4f"
+                  strokeWidth={3}
+                  strokeDasharray="4 4"
+                  label={{ value: "Límite / normal", position: "insideTopRight", fill: "#ff4d4f", fontWeight: 700 }}
+                />
+              )}
               <Bar dataKey={metric} fill="#8884d8" radius={[8, 8, 0, 0]} />
               <Line type="monotone" dataKey={metric} stroke="#ff7300" strokeWidth={2} />
             </ComposedChart>
@@ -569,6 +799,21 @@ export default function GraficosSensores({ databaseType, collection }) {
                 </Select>
               </FormControl>
             )}
+
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel>Predicción</InputLabel>
+              <Select
+                value={predictionHorizon}
+                label="Predicción"
+                onChange={(e) => setPredictionHorizon(parseInt(e.target.value, 10))}
+              >
+                {predictionOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
 
           {renderChart()}

@@ -25,33 +25,16 @@ function a11yProps(index) {
 
 export default function DashboardSensores({ mode = "both" }) {
   // mode puede ser: "table", "charts", o "both"
-  const [databaseType, setDatabaseType] = useState("mongodb");
-  const [currentTab, setCurrentTab] = useState(0);
-  const [selectedCollection, setSelectedCollection] = useState("sensores-soterreados");
-  const [selectedPostgresTable, setSelectedPostgresTable] = useState("sensores_soterrados");
+  // Forzamos MongoDB como fuente única
+  const [databaseType] = useState("mongodb");
+  const [currentTab, setCurrentTab] = useState(mode === "table" ? 0 : 1);
+  const [selectedCollection, setSelectedCollection] = useState("sensores-sonidos");
 
   const mongodbCollections = [
     { value: "sensores-soterreados", label: "Sensores Soterreados" }, // El backend acepta ambos nombres
     { value: "sensores-sonidos", label: "Sensores Sonidos" }, // El backend acepta ambos nombres
     { value: "sensores-calidad-aire", label: "Sensores Calidad Aire" },
   ];
-
-  const postgresTables = [
-    { value: "sensores_soterrados", label: "Sensores Soterrados" },
-    { value: "sensores_sonido", label: "Sensores Sonido" },
-    { value: "sensores_calidad_aire", label: "Sensores Calidad Aire" },
-  ];
-
-  const handleDatabaseChange = (event) => {
-    setDatabaseType(event.target.value);
-    setCurrentTab(0);
-    // Resetear selecciones
-    if (event.target.value === "mongodb") {
-      setSelectedCollection("sensores-soterreados");
-    } else {
-      setSelectedPostgresTable("sensores_soterrados");
-    }
-  };
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -86,18 +69,9 @@ export default function DashboardSensores({ mode = "both" }) {
             <Typography variant="h4" sx={{ fontWeight: 700, color: "#000" }}>
               Dashboard de Sensores
             </Typography>
-
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Base de Datos</InputLabel>
-              <Select
-                value={databaseType}
-                label="Base de Datos"
-                onChange={handleDatabaseChange}
-              >
-                <MenuItem value="mongodb">MongoDB</MenuItem>
-                <MenuItem value="postgresql">PostgreSQL</MenuItem>
-              </Select>
-            </FormControl>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              Base de datos: MongoDB (fijada)
+            </Typography>
           </Box>
 
           {databaseType === "mongodb" && (
@@ -112,25 +86,6 @@ export default function DashboardSensores({ mode = "both" }) {
                   {mongodbCollections.map((col) => (
                     <MenuItem key={col.value} value={col.value}>
                       {col.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          )}
-
-          {databaseType === "postgresql" && (
-            <Box sx={{ mt: 2 }}>
-              <FormControl sx={{ minWidth: 250 }}>
-                <InputLabel>Tabla</InputLabel>
-                <Select
-                  value={selectedPostgresTable}
-                  label="Tabla"
-                  onChange={(e) => setSelectedPostgresTable(e.target.value)}
-                >
-                  {postgresTables.map((table) => (
-                    <MenuItem key={table.value} value={table.value}>
-                      {table.label}
                     </MenuItem>
                   ))}
                 </Select>
